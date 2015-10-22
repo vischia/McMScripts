@@ -116,6 +116,8 @@ The field PrepId is only used in modifying requests.
 
 Adding the fields "Gridpack location" and "Gridpack cards URL" will generate a LHEProducer fragment.
 
+Example CSV files are create_SUSYGluGluToBBHToBB.csv to create a set of new requests, and modify_SUSYGluGluToBBHToBB.csv to modify them. Some fields can be removed from the set if not relevant (for instance the notes).
+
 ### Dry run
 
 The input.csv file can be tested with a dry run using the flag `-d`. Additionally, you can submit to the dev/test instance of McM using the flag `--dev`.

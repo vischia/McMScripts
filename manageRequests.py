@@ -21,7 +21,7 @@ from rest import * # Load class to access McM
 from requestClass import * # Load class to store request information
 
 def getArguments():
-    defaultPWG = 'XXX' # Change this line to your PWG, then -p flag is not needed
+    defaultPWG = 'HIG' # Change this line to your PWG, then -p flag is not needed
 
     parser = argparse.ArgumentParser(description='Create, modify, and clone McM requests.')
 
