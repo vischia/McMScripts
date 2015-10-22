@@ -1,0 +1,10 @@
+Dataset name,Cross Section,Number of Events,Time per event,Size per event,generator,FilterEfficiency,Filter Efficiency Error,Match Efficiency,Match Efficiency Error,notes
+SUSYGluGluToBBHToBB_M-160_TuneCUETP8M1_13TeV-pythia8,1,1000000,1,1,"pythia8",1,0.01,1,0.01,"gg->bbA,13TeV,mA = 160GeV,A->bb"
+SUSYGluGluToBBHToBB_M-200_TuneCUETP8M1_13TeV-pythia8,1,1000000,1,1,"pythia8",1,0.01,1,0.01,"gg->bbA,13TeV,mA = 200GeV,A->bb"
+SUSYGluGluToBBHToBB_M-250_TuneCUETP8M1_13TeV-pythia8,1,1000000,1,1,"pythia8",1,0.01,1,0.01,"gg->bbA,13TeV,mA = 250GeV,A->bb"
+SUSYGluGluToBBHToBB_M-350_TuneCUETP8M1_13TeV-pythia8,1,1000000,1,1,"pythia8",1,0.01,1,0.01,"gg->bbA,13TeV,mA = 350GeV,A->bb"
+SUSYGluGluToBBHToBB_M-400_TuneCUETP8M1_13TeV-pythia8,1,1000000,1,1,"pythia8",1,0.01,1,0.01,"gg->bbA,13TeV,mA = 400GeV,A->bb"
+SUSYGluGluToBBHToBB_M-500_TuneCUETP8M1_13TeV-pythia8,1,1000000,1,1,"pythia8",1,0.01,1,0.01,"gg->bbA,13TeV,mA = 500GeV,A->bb"
+SUSYGluGluToBBHToBB_M-700_TuneCUETP8M1_13TeV-pythia8,1,1000000,1,1,"pythia8",1,0.01,1,0.01,"gg->bbA,13TeV,mA = 700GeV,A->bb"
+SUSYGluGluToBBHToBB_M-900_TuneCUETP8M1_13TeV-pythia8,1,1000000,1,1,"pythia8",1,0.01,1,0.01,"gg->bbA,13TeV,mA = 900GeV,A->bb"
+SUSYGluGluToBBHToBB_M-1300_TuneCUETP8M1_13TeV-pythia8,1,1000000,1,1,"pythia8",1,0.01,1,0.01,"gg->bbA,13TeV,mA = 1300GeV,A->bb"
