@@ -63,9 +63,13 @@ To create new requests from a CSV file, execute the command
 
 `python manageRequests.py -c name_of_campaign input.csv`
 
+An example for the CSV files to be used is create_SUSYGluGluToBBHToBB.csv (some fields can be removed from the set if not relevant, for instance the notes).
+
 If you would like to create new requests by cloning an existing request, execute the command
 
 `python manageRequests.py --clone PrepId_of_request_to_clone input.csv`
+
+An example for the CSV files to be used is modify_SUSYGluGluToBBHToBB.csv (some fields can be removed from the set if not relevant, for instance the notes).
 
 Unless the flags `--clone` or `--modify` or `-m` are used, the script will use the CSV file to create new requests from scratch.
 
@@ -115,8 +119,6 @@ The campaign and PWG can also be given for all requests with the flags `-c` and 
 The field PrepId is only used in modifying requests.
 
 Adding the fields "Gridpack location" and "Gridpack cards URL" will generate a LHEProducer fragment.
-
-Example CSV files are create_SUSYGluGluToBBHToBB.csv to create a set of new requests, and modify_SUSYGluGluToBBHToBB.csv to modify them. Some fields can be removed from the set if not relevant (for instance the notes).
 
 ### Dry run
 
