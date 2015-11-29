@@ -48,17 +48,21 @@ class bcolors:
     Highlighted_Crimson_like_Chianti = '\033[1;48m'
 
 def getArguments():
-    parser = argparse.ArgumentParser(description='Get a list of PrepIDs from McM based on a query.')
+    parser = argparse.ArgumentParser(
+        description='Get a list of PrepIDs from McM based on a query.')
 
     # Command line flags
     parser.add_argument('query')
-    parser.add_argument('-n', action='store_true', dest='getNew', help='Only get requests with unmodified time and size per event.')
-    parser.add_argument('-v', action='store_true', dest='getForValidation', help='Only get requests with positive time and size per event.')
-    parser.add_argument('-c', action='store_true', dest='getChain', help='Return PrepID of chain.')
-    parser.add_argument('-listattr', dest='listAttr', type=int, default=-1, 
-                        help='List attributes for each PrepID. 0 (default) to 5 in increasing level of verbosity')
+    parser.add_argument('-n', action='store_true', dest='getNew',
+                        help='Only get requests with unmodified time and size per event.')
+    parser.add_argument('-v', action='store_true', dest='getForValidation',
+                        help='Only get requests with positive time and size per event.')
+    parser.add_argument('-c', action='store_true', dest='getChain',
+                        help='Return PrepID of chain.')
     parser.add_argument('-f', dest='format', type=int, default=0,
                         help='Format of output. 0 (default) = input for scripts, 1 = human-readable, 2 = HTML')
+    parser.add_argument('-listattr', dest='listAttr', type=int, default=-1, 
+                        help='List attributes for each PrepID. 0 (default) to 5 in increasing level of verbosity')
 
     args_ = parser.parse_args()
     return args_
@@ -67,8 +71,7 @@ def getArguments():
 def checkFile(file_):
     # Check that CSV file exists
     if not os.path.isfile(file_):
-        print "Error: File %s does not exist." % file_
-        print "Exiting with status 1."
+        print "Error: File {0} does not exist.".format(file_)
         sys.exit(1)
 
 
@@ -193,8 +196,7 @@ def isSequential(lastID, currentID):
     current = currentID.split('-')
 
     if len(last) == 3 and len(current) == 3:
-        if last[0] == current[0] \
-                and last[1] == current[1] \
+        if last[0] == current[0] and last[1] == current[1] \
                 and int(last[2]) + 1 == int(current[2]):
             return True
     return False
