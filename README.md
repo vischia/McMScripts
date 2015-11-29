@@ -38,7 +38,7 @@ Several scripts use lists of PrepIDs. Multiple requests can be seperated by a `,
 
 `EXO-RunIIWinter15GS-00001,EXO-RunIIWinter15GS-00003`
 
-Consecutive requests can be expressed as ranges separated by `-`. The PWG and campaign must be the same for both the first and last PrepID. Alternatively, the PWG and campaign can be omitted. For example, here is a list of five requests:
+Consecutive requests can be expressed as ranges separated by `-`. The PWG (Physics Working Group Code, for instance HIG) and campaign must be the same for both the first and last PrepID. Alternatively, the PWG and campaign can be omitted. For example, here is a list of five requests:
 
 `HIG-Fall13pLHE-00027-HIG-Fall13pLHE-00028,TOP-chain_RunIIWinter15GS_flowRunIISpring15DR74Startup25ns-00001-3`
 
@@ -55,7 +55,7 @@ Usage of manageRequests.py
 
 ### Setup PWG
 
-The default PWG in manageRequests.py is set to XXX. To modify your default PWG, change the variable `defaultPWG` on line 23. Alternatively, you can include the flag `-p your_PWG`.
+The default PWG (Physics Working Group Code, for instance HIG) in manageRequests.py is set to XXX. To modify your default PWG, change the variable `defaultPWG` on line 23. Alternatively, you can include the flag `-p your_PWG`.
 
 ### Creating new requests
 
