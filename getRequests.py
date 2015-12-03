@@ -85,7 +85,7 @@ def getMcMlist(query_string,printout):
 def getPrepIDListWithAttributes(query_string,listAttr):
     req_list = getMcMlist(query_string,True)
     print '\n'
-    print '======================================================================================================================================================================\n'
+    if listAttr > 1: print '======================================================================================================================================================================\n'
     for req in req_list:
         if listAttr > 5: # full dump of the request object, useful for debugging purpose
             print bcolors.MAGENTA +\
@@ -164,7 +164,7 @@ def getPrepIDListWithAttributes(query_string,listAttr):
                       ''+ bcolors.ENDC
             print bcolors.ENDC
         
-        print '======================================================================================================================================================================\n\n',\
+        if listAttr > 1: print '======================================================================================================================================================================\n\n',\
         
 def getPrepIDList(query_string, getNew, getForValidation, getChain):
     req_list = getMcMlist(query_string,True)
