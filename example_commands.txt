@@ -18,12 +18,26 @@ python checkRequests.py PrepIDList
 # new requests
 python manageRequests.py -c name_of_campaign input.csv
 
-# clone existing requests
+# clone existing requests (cloning works one to many [as many lines as are in input.csv])
 python manageRequests.py --clone PrepId_of_request_to_clone input.csv
 
 # modify existing requests
 python manageRequests.py -m input.csv
 
+# Create a test of requests
+python testRequests.py -i PrepIDList
+
+# Extract the time and size per event from the tests
+python testRequests.py -f file.csv
+
+# Validate chained requests 
+python validateChains.py PrepIDList
+
+
+
+
 # validate chains
 python validateChains.py PrepIDList
 
+# replace tab separated (excel likes it...) to comma separated (the script needs it...)
+sed -i 's/\t/,/g' file.csv
