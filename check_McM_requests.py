@@ -22,45 +22,12 @@ sys.path.append('/afs/cern.ch/cms/PPD/PdmV/tools/McM/')
 from rest import * # Load class to access McM
 from requestClass import * # Load class to store request information
 
-# plot_dir='/afs/cern.ch/user/p/perrozzi/www/work/MC_Higgs_testhmtl'
 plot_dir='/afs/cern.ch/user/p/perrozzi/www/work/MC_Higgs'
 print_to_screen = False
 pwgs=['HIG']
 tags=['HBB','HWW','HGG','HZZ','HTT','ttH']
 prepids=['LHE','GS','DR','Mini']
-statuses=['new','validation','defined','approved','submitted'] #]
-
-# tags=['HGG']
-# prepids=['LHE']
-# statuses=['submitted'] #]
-# print_to_screen = True
-
-class bcolors:
-    MAGENTA = '\033[35m'
-    BLUE = '\033[34m'
-    GREEN = '\033[32m'
-    # RED = '\033[31m'
-    YELLOW = '\033[33m'
-    WHITE = '\033[1;37m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    Gray_like_Ghost = '\033[1;30m'
-    RED = '\033[1;31m' 
-    Green_like_Grass = '\033[1;32m' 
-    Yellow_like_Yolk = '\033[1;33m'
-    Blue_like_Blood = '\033[1;34m'
-    Magenta_like_Mimosa = '\033[1;35m'
-    CYAN = '\033[1;36m'
-    Crimson_like_Chianti = '\033[1;38m'
-    Highlighted_Red_like_Radish = '\033[1;41m'
-    Highlighted_Green_like_Grass = '\033[1;42m'
-    Highlighted_Brown_like_Bear = '\033[1;43m'
-    Highlighted_Blue_like_Blood = '\033[1;44m'
-    Highlighted_Magenta_like_Mimosa = '\033[1;45m'
-    Highlighted_Cyan_like_Caribbean = '\033[1;46m'
-    Highlighted_Gray_like_Ghost = '\033[1;47m'
-    Highlighted_Crimson_like_Chianti = '\033[1;48m'
+statuses=['new','validation','defined','approved','submitted']
 
 def print_table_header(data, row_length):
     print '<table border="1" CELLPADDING="5">'
@@ -81,7 +48,6 @@ def print_table_footer():
     print '</table>'
 
 def print_table(data, row_length):
-    # print '<table border="1">'
     counter = 0
     for element in data:
         if counter % row_length == 0:
@@ -94,7 +60,6 @@ def print_table(data, row_length):
         for i in range(0, row_length - counter % row_length):
             print '<td>&nbsp;</td>'
         print '</tr>'
-    # print '</table>'
 
 def getMcMlist(query_string,printout):
     useDev = False
@@ -105,7 +70,6 @@ def getMcMlist(query_string,printout):
 def getPrepIDListWithAttributes(query_string,tag):
     print '<font size="5">MCM query string: <b>' + query_string + '</b> </font>'
     print '<br> <br> Last update on: <b>' + str(datetime.datetime.now()) + '</b>'
-    # return
     temp = sys.stdout
     f = open('/dev/null', 'w')
     sys.stdout = f
@@ -117,20 +81,14 @@ def getPrepIDListWithAttributes(query_string,tag):
     else: print '\n'
     for req in req_list:
         print '<hr>'
-        # print 'prepid=',req['prepid'],', ',
         print '<br>Dataset name=<b>',req['dataset_name'],\
               '</b>, Extension=',req['extension'],
-        # print', Completed/Total events=',str(req['completed_events'])+'/'+str(req['total_events']),\
-              # '',
-        # else: 
         print '\t('+req['prepid']+')','\n'
 
-        # print '<br>Member of chain(s)<br>'
         print '<br>'
         chains = [x for x in req['member_of_chain'] if x is not None] 
         for current_chain in chains:           
             query_chains = "member_of_chain="+current_chain
-            # print "req['member_of_chain'][0]",query_chains
             temp = sys.stdout
             f = open('/dev/null', 'w')
             sys.stdout = f
@@ -148,10 +106,7 @@ def getPrepIDListWithAttributes(query_string,tag):
                   gif = url.replace('\\n','').replace("'",'').replace(",",'')
                   prepid_name = gif.split('/')[8]
                   gif_name = str(req1['reqmgr_name'][0]['name'].replace('pdmvserv_task_','').replace(req1['prepid'],'').replace('__','_'))
-                  # print 'gif_name',gif_name
-                  # print('wget '+gif+'; mv '+ntpath.basename(gif)+' '+plot_dir+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+'.gif')
                   os.system('wget '+gif+'; mv '+ntpath.basename(gif)+' '+plot_dir+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+gif_name+'.gif')
-                  # prepid1.append('<a href="'+plot_dir.replace('/afs/cern.ch/user/p/perrozzi/www','https://perrozzi.web.cern.ch/perrozzi')+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+gif_name+'.gif'+'" target="_blank">Link</a>')
                   prepid1.append('<a href="'+plot_dir.replace('/afs/cern.ch/user/p/perrozzi/www','https://perrozzi.web.cern.ch/perrozzi')+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+gif_name+'.gif'+'" target="_blank"><img src="'+plot_dir.replace('/afs/cern.ch/user/p/perrozzi/www','https://perrozzi.web.cern.ch/perrozzi')+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+gif_name+'.gif" style="border: none; height: 100px;" ></a>')
                 else: prepid1.append('')
                 prepid1.append(str(req1['priority']))
@@ -167,36 +122,26 @@ def getPrepIDListWithAttributes(query_string,tag):
             print_table_header(['prepid','Approv/Status','Compl Evts','Events growth','Priority','Last update'],n)
             if prepid1 is not None:
               for prepid in prepid1[::-1]:
-                # for item in prepid:
-                  # item.replace(None,' ')
-                  # item.replace('',' ')
                 prepid = [x for x in prepid if x is not None] 
-                # print str(prepid).strip('[').strip(']').replace("u'",'').replace("'","").replace(",","\t||\t")
                 print_table(prepid,n)
-                # print 'McM View Link= https://cms-pdmv.cern.ch/mcm/chained_requests?shown=4095&prepid='+current_chain
             print_table_footer()
         
         print '<br>'
-        # sys.exit()
 
 def main():
     
     file_extension = 'html'
-    # file_extension = 'log'
     
     for pwg in pwgs:
       for tag in tags:
         for prepid in prepids:
           for status in statuses:
-            # print pwg+'_'+tag+'_'+prepid+'_'+status
             
             if not print_to_screen:
               f = open('log_'+pwg+'_'+tag+'_'+prepid+'_'+status+'.'+file_extension, 'w')
               sys.stdout = f
             
             dict = getPrepIDListWithAttributes('prepid=*'+pwg+'*'+prepid+'*&tags=*'+tag+'*&status='+status,tag)
-            # os.system('python getRequests.py -listattr 7 "prepid=*'+pwg+'*'+prepid+'*&tags=*'+tag+'*&status='+status+'" 2>&1 >'+append+' log_'+pwg+'_'+tag+'_'+prepid+'_'+status+'.log')
-            # sys.exit()
             
             if not print_to_screen:
               os.system("mv log_HIG_*."+file_extension+" "+plot_dir)
@@ -206,9 +151,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-# directory = time.strftime('%Y-%m-%d')
-# if not os.path.exists(directory):
-    # os.makedirs('~/www/work/MC_Higgs/'+directory)
-    
