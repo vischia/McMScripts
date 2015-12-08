@@ -13,11 +13,12 @@
 ################################
 
 import sys
-import os
+import os, shutil
 import subprocess
 import argparse
 import csv
 import re
+import datetime
 sys.path.append('/afs/cern.ch/cms/PPD/PdmV/tools/McM/')
 from rest import * # Load class to access McM
 from requestClass import * # Load class to store request information
@@ -29,9 +30,15 @@ def getArguments():
     parser.add_argument('-i', '--ids', dest='ids', help=
                         'List of PrepIDs to be tested. Separate range by >.')
     parser.add_argument('-f', '--file', dest='csv', help='Input CSV file.')
-    parser.add_argument('-o', '--output', dest='output', default='test.csv',
+    parser.add_argument('-newcsv', action='store_true', dest='newcsv',
+                        help="Don't overwrite testRequest.csv")
+    parser.add_argument('-o', '--output', dest='output', default='testRequest.csv',
                         help='Output CSV file')
     parser.add_argument('-n', dest='nEvents', help='Number of events to test.')
+    parser.add_argument('-nxsec', dest='nEventsXsec', default=1500, help='Number of events to test for Cross section purpose.')
+    parser.add_argument('-qxsec', dest='xsecQueue', default='8nh', help='Submission queue for Cross section test.')
+    parser.add_argument('-xsec', action='store_true', dest='xsec',
+                        help='Run only GEN and not SIM step (useful to get cross section).')
 
     args_ = parser.parse_args()
     return args_
@@ -78,7 +85,7 @@ def parseIDList(compactList):
             sys.exit(3)
     return requests
 
-def getTestScript(PrepID, nEvents):
+def getTestScript(PrepID, nEvents, xsec):
     request_type = "requests"
     if "chain_" in PrepID:
         request_type = "chained_requests"
@@ -96,57 +103,94 @@ https://cms-pdmv.cern.ch/mcm/public/restapi/{0}/get_test/{1}/{2} -o {3}.sh".form
     print get_test
     subprocess.call(get_test, shell=True)
 
-    if request_type == "chained_requests" and nEvents is not None:
+    if (request_type == "chained_requests" and (nEvents is not None or xsec)) or xsec:
         filename = "{0}.sh".format(PrepID)
+        if xsec:
+            shutil.copy2(filename, filename.replace('.sh','_xsec.sh'))
+            filename = filename.replace('.sh','_xsec.sh')
+        
         tmpfilename = "tmp{0}.sh".format(PrepID)
         inputfile = open(filename, 'r')
         outputfile = open(tmpfilename, 'w')
         for line in inputfile:
-            outline = re.sub('(.*--eventcontent LHE.*-n) \d*( .*)',
-                             r'\1 {0}\2'.format(nEvents), line)
-            outline = re.sub('(.*--eventcontent DQM.*-n) \d*( .*)',
-                             r'\1 {0}\2'.format(nEvents), outline)
-            outline = re.sub('(.*--eventcontent RAWSIM.*-n) \d*( .*)',
-                             r'\1 {0}\2'.format(nEvents), outline)
+            if nEvents is not None:
+                outline = re.sub('(.*--eventcontent LHE.*-n) \d*( .*)',
+                                 r'\1 {0}\2'.format(nEvents), line)
+                outline = re.sub('(.*--eventcontent DQM.*-n) \d*( .*)',
+                                 r'\1 {0}\2'.format(nEvents), outline)
+                outline = re.sub('(.*--eventcontent RAWSIM.*-n) \d*( .*)',
+                                 r'\1 {0}\2'.format(nEvents), outline)
+            if xsec:
+                outline = line.replace('GEN,SIM','GEN')
+                
             outputfile.write(outline)
+            
         inputfile.close()
         outputfile.close()
         os.rename(tmpfilename, filename)
 
     subprocess.call("chmod 755 {0}.sh".format(PrepID), shell=True)
+    if xsec:
+        subprocess.call("chmod 755 {0}_xsec.sh".format(PrepID), shell=True)
+
     return
 
-def submitToBatch(PrepId):
-    batch_command = "bsub -q 8nh {0}.sh".format(PrepId)
-    print batch_command
+def submitToBatch(PrepId, xsec, xsecQueue):
+    if xsec:
+        batch_command = "bsub -q "+xsecQueue+" {0}_xsec.sh".format(PrepId)
+    else:
+        batch_command = "bsub -q 8nh {0}.sh".format(PrepId)
     output = subprocess.Popen(batch_command, stdout=subprocess.PIPE,
                               shell=True).communicate()[0]
+    # jobID = '733114557'
+    # if xsec: jobID = '733114566'
     match = re.match('Job <(\d*)> is', output)
     jobID = match.group(1)
+    print batch_command,' (jobID= '+jobID+')'
     return jobID
 
-def createTest(compactPrepIDList, outputFile, nEvents):
+def createTest(compactPrepIDList, outputFile, newcsv, nEvents, xsec, nEventsXsec, xsecQueue):
     requests = parseIDList(compactPrepIDList)
 
+    if os.path.isfile(outputFile) and newcsv:
+      add_datetime = str(datetime.datetime.now()).replace(' ','_').replace(':','-').split('.')[0]
+      outputFile = outputFile.replace('.csv','')+'_'+add_datetime+'.csv'
     csvfile = csv.writer(open(outputFile, 'w'))
-    csvfile.writerow(['PrepId', 'JobId', 'Time per event [s]',
-                      'Size per event [kB]'])
+    if xsec:
+        csvfile.writerow(['PrepId', 'JobId', 'JobId xsec', 'Time per event [s]',
+                        'Size per event [kB]','Cross section [pb]'])
+    else:
+        csvfile.writerow(['PrepId', 'JobId', 'Time per event [s]',
+                        'Size per event [kB]'])
 
     print "Testing {0} requests".format(len(requests))
     for req in requests:
-        getTestScript(req.getPrepId(), nEvents)
-        jobID = submitToBatch(req.getPrepId())
+        if xsec and 'GS' in req.getPrepId():
+            getTestScript(req.getPrepId(), nEventsXsec,True)
+            jobIDxsec = submitToBatch(req.getPrepId(),True,xsecQueue)
+            req.setJobIDxsec(jobIDxsec)
+        
+        getTestScript(req.getPrepId(), nEvents,False)
+        jobID = submitToBatch(req.getPrepId(),False,'8nh')
         req.setJobID(jobID)
+        
         searched = re.search('chain_', req.getPrepId())
         if searched is None:
-            csvfile.writerow([req.getPrepId(), req.getJobID(), "", ""])
+            if xsec:
+                csvfile.writerow([req.getPrepId(), req.getJobID(), req.getJobIDxsec(), "", "",""])
+            else:
+                csvfile.writerow([req.getPrepId(), req.getJobID(), "", ""])
         else:
             mcm = restful(dev=False) # Get McM connection
             mcm_req = mcm.getA('chained_requests', req.getPrepId())
             wmLHEPrepId = mcm_req['chain'][0]
             GSPrepId = mcm_req['chain'][1]
-            csvfile.writerow([wmLHEPrepId, req.getJobID(), "", ""])
-            csvfile.writerow([GSPrepId, req.getJobID(), "", ""])
+            if xsec:
+                csvfile.writerow([wmLHEPrepId, req.getJobID(), req.getJobIDxsec(), "", ""])
+                csvfile.writerow([GSPrepId, req.getJobID(), req.getJobIDxsec(), "", ""])
+            else:
+                csvfile.writerow([wmLHEPrepId, req.getJobID(), "", ""])
+                csvfile.writerow([GSPrepId, req.getJobID(), "", ""])
     return
 
 def exitDuplicateField(file_in_,field_):
@@ -157,7 +201,7 @@ def exitDuplicateField(file_in_,field_):
 def getFields(csvfile):
     # List of indices for each field in CSV file
     list = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-             -1, -1, -1, -1]
+             -1, -1, -1, -1,-1]
     header = csv.reader(csvfile).next()
     for ind, field in enumerate(header):
         if field in ['Dataset name', 'Dataset Name', 'Dataset', 'dataset']:
@@ -264,6 +308,10 @@ def getFields(csvfile):
             if list[20] > -1:
                 exitDuplicateField(file_in_, "JobId")
             list[20] = ind
+        elif field in ['JobId xsec']:
+            if list[21] > -1:
+                exitDuplicateField(file_in_, "JobId xsec")
+            list[21] = ind
         elif field in ['Local gridpack location', 'Local LHE', 'LHE']:
             continue
         else:
@@ -282,7 +330,7 @@ def fillFields(csvfile, fields):
             tmpReq.setDataSetName(row[fields[0]])
         if fields[1] > -1:
             tmpReq.setMCDBID(row[fields[1]])
-        if fields[2] > -1:
+        if fields[2] > -1 and row[fields[2]] != "":
             tmpReq.setCS(row[fields[2]])
         if fields[3] > -1:
             tmpReq.setEvts(row[fields[3]])
@@ -323,22 +371,36 @@ def fillFields(csvfile, fields):
                 tmpReq.setMcMFrag(createLHEProducer(row[fields[18]], ""))
         if fields[20] > -1:
             tmpReq.setJobID(row[fields[20]])
+        if fields[21] > -1:
+            tmpReq.setJobIDxsec(row[fields[21]])
         requests.append(tmpReq)
     return requests, num_requests
 
 def rewriteCSVFile(csvfile, requests):
     csvWriter = csv.writer(csvfile)
-    csvWriter.writerow(['PrepId', 'JobId', 'Time per event [s]',
-                        'Size per event [kB]'])
-
+    requests_number=0
     for req in requests:
+        if requests_number == 0:
+            if req.useCS():
+                csvWriter.writerow(['PrepId', 'JobId', 'JobId xsec', 'Time per event [s]',
+                                'Size per event [kB]','Cross section [pb]'])
+            else:
+                csvWriter.writerow(['PrepId', 'JobId', 'JobId xsec', 'Time per event [s]',
+                                'Size per event [kB]'])
+        
         timePerEvent = ""
         if req.useTime(): timePerEvent = req.getTime()
         sizePerEvent = ""
         if req.useSize(): sizePerEvent = req.getSize()
-
-        csvWriter.writerow([req.getPrepId(), req.getJobID(), timePerEvent,
+        CS = ""
+        if req.useCS(): 
+            CS = req.getCS()
+            csvWriter.writerow([req.getPrepId(), req.getJobID(), req.getJobIDxsec(), timePerEvent,
+                            sizePerEvent, CS])
+        else:
+            csvWriter.writerow([req.getPrepId(), req.getJobID(), req.getJobIDxsec(), timePerEvent,
                             sizePerEvent])
+        requests_number = requests_number+1
     return
 
 def getTimeSizeFromFile(stdoutFile, iswmLHE):
@@ -369,6 +431,25 @@ def getTimeSizeFromFile(stdoutFile, iswmLHE):
         sizePerEvent = -1
     return timePerEvent, sizePerEvent
 
+def getCSFromFile(stdoutFile):
+    CS = 0
+    fileContents = open(stdoutFile, 'r')
+    match = ''
+    for line in fileContents:
+        if 'After filter: final cross section' in line: 
+            match = line.split('=')[1].split('+-')[0].replace(' ','')
+            CS = float(match)
+            continue
+    # for line in fileContents:
+        # # match = re.match('After filter: final cross section = (\d*\.\d*) +- (\d*\.\d*) pb', line)
+        # if 'After filter: final cross section' in line: match = line.split('=')[1].split('+-')[0].replace(' ','')
+        # if match is not None:
+            # print 'line',line
+            # nEvents = float(match.group(1))
+            # continue
+
+    return CS
+
 def getTimeSize(requests):
     number_complete = 0
     for req in requests:
@@ -388,9 +469,33 @@ def getTimeSize(requests):
             number_complete += 1
 
     if number_complete == len(requests):
-        print "Extracted info for all {0} requests.".format(len(requests))
+        print "Extracted Time per event and Size for all {0} requests.".format(len(requests))
     else:
-        print "Extracted info for {0} of {1} requests. {2} requests remain.".format(
+        print "Extracted Time per event and Size for {0} of {1} requests. {2} requests remain.".format(
+            number_complete, len(requests), len(requests) - number_complete)
+    return
+
+def getCrossSection(requests):
+    number_complete = 0
+    for req in requests:
+        if not req.useCS():
+            stdoutFile = "LSFJOB_{0}/STDOUT".format(req.getJobIDxsec())
+            if os.path.exists(stdoutFile):
+                number_complete += 1
+                iswmLHE = False
+                searched = re.search('wmLHE', req.getPrepId())
+                if searched is not None:
+                    iswmLHE = True
+                if iswmLHE == False:
+                    CSPerEvent = getCSFromFile(stdoutFile)
+                    req.setCS(CSPerEvent)
+        else:
+            number_complete += 1
+
+    if number_complete == len(requests):
+        print "Extracted Cross section for all {0} requests.".format(len(requests))
+    else:
+        print "Extracted Cross section for {0} of {1} requests. {2} requests remain.".format(
             number_complete, len(requests), len(requests) - number_complete)
     return
 
@@ -402,6 +507,7 @@ def extractTest(csvFile):
     csvfile.close()
 
     getTimeSize(requests)
+    getCrossSection(requests)
 
     csvfile = open(csvFile, 'w')
     rewriteCSVFile(csvfile, requests)
@@ -414,7 +520,7 @@ def main():
         print "Error: Cannot use both -i and -f."
         sys.exit(1)
     elif args.ids:
-        createTest(args.ids, args.output, args.nEvents)
+        createTest(args.ids, args.output, args.newcsv, args.nEvents, args.xsec, args.nEventsXsec, args.xsecQueue)
     elif args.csv:
         extractTest(args.csv)
     else:
