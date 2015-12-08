@@ -30,6 +30,7 @@ class Request:
         self.useSequencesCustomise_ = False
         self.useProcessString_      = False
         self.useJobID_              = False
+        self.useJobIDxsec_          = False
         self.useNotes_              = False
 
     def setDataSetName(self,x):
@@ -92,6 +93,9 @@ class Request:
     def setJobID(self,x):
         self.JobID_ = x
         self.useJobID_ = True
+    def setJobIDxsec(self,x):
+        self.JobIDxsec_ = x
+        self.useJobIDxsec_ = True
     def setNotes(self, x):
         self.Notes_ = x
         self.useNotes_ = True
@@ -136,6 +140,8 @@ class Request:
         return self.ProcessString_
     def getJobID(self):
         return self.JobID_
+    def getJobIDxsec(self):
+        return self.JobIDxsec_
     def getNotes(self):
         return self.Notes_
 
@@ -179,5 +185,7 @@ class Request:
         return self.useProcessString_
     def useJobID(self):
         return self.useJobID_
+    def useJobIDxsec(self):
+        return self.useJobIDxsec_
     def useNotes(self):
         return self.useNotes_
