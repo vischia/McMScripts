@@ -26,10 +26,13 @@ from requestClass import * # Load class to store request information
 plot_dir='/afs/cern.ch/user/p/perrozzi/www/work/MC_Higgs'
 print_to_screen = False
 pwgs=['HIG']
-tags=['HBB','HWW','HGG','HZZ','HTT','ttH']
+tags=['HBB','HWW','HGG','HZZ','HTT','ttH','HH']
 prepids=['LHE','GS','DR','Mini']
 statuses=['new','validation','defined','approved','submitted'] #]
+actors=['perrozzi','obondu']
 
+# actors=['obondu']
+# tags=['HH']
 # tags=['HGG']
 # prepids=['LHE']
 # statuses=['submitted'] #]
@@ -200,6 +203,23 @@ def main():
             
             if not print_to_screen:
               os.system("mv log_HIG_*."+file_extension+" "+plot_dir)
+    
+    for actor in actors:
+      # for tag in tags:
+        for prepid in prepids:
+          for status in statuses:
+            # print pwg+'_'+tag+'_'+prepid+'_'+status
+            
+            if not print_to_screen:
+              f = open('log_'+actor+'_'+prepid+'_'+status+'.'+file_extension, 'w')
+              sys.stdout = f
+            
+            dict = getPrepIDListWithAttributes('actor='+actor+'&prepid=*'+prepid+'*&status='+status,'')
+            # os.system('python getRequests.py -listattr 7 "prepid=*'+pwg+'*'+prepid+'*&tags=*'+tag+'*&status='+status+'" 2>&1 >'+append+' log_'+pwg+'_'+tag+'_'+prepid+'_'+status+'.log')
+            # sys.exit()
+            
+            if not print_to_screen:
+              os.system("mv log_"+actor+"*."+file_extension+" "+plot_dir)
 
     return
 
