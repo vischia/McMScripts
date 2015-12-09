@@ -78,16 +78,23 @@ def checkFile(file_):
 def getMcMlist(query_string,printout):
     useDev = False
     mcm = restful( dev=useDev ) # Get McM connection
-    if printout: print 'MCM query string: ' + bcolors.MAGENTA + query_string + bcolors.ENDC
     req_list = mcm.getA('requests', query=query_string)
     return req_list
 
 def getPrepIDListWithAttributes(query_string,listAttr):
+    print 'MCM query string: ' + bcolors.MAGENTA + query_string + bcolors.ENDC
+    temp = sys.stdout
+    f = open('/dev/null', 'w')
+    sys.stdout = f
     req_list = getMcMlist(query_string,True)
+    sys.stdout = temp
+    if req_list is None:
+      print "\033[1;31mCould not get requests from McM\033[1;m"; sys.exit(1)
+
     print '\n'
     if listAttr > 1: print '======================================================================================================================================================================\n'
     for req in req_list:
-        if listAttr > 5: # full dump of the request object, useful for debugging purpose
+        if listAttr == 6: # full dump of the request object, useful for debugging purpose
             print bcolors.MAGENTA +\
                   'prepid='+ bcolors.ENDC,req['prepid'],\
                   ''+ bcolors.ENDC
@@ -96,22 +103,24 @@ def getPrepIDListWithAttributes(query_string,listAttr):
         else:
             # print '======================================================================================================================================================================\n',\
                   # '======================================================================================================================================================================'
-            print bcolors.MAGENTA +\
-                  'prepid='+ bcolors.ENDC,req['prepid'],\
-                  ', '+bcolors.MAGENTA+'Dataset name='+ bcolors.ENDC,req['dataset_name'],\
-                  ', '+bcolors.MAGENTA+'Extension='+ bcolors.ENDC,req['extension'],\
-                  ', '+bcolors.MAGENTA+'Completed/Total events='+ bcolors.ENDC,str(req['completed_events'])+'/'+str(req['total_events']),\
-                  ''+ bcolors.ENDC
-            if listAttr > 0:
+            if listAttr < 6: print bcolors.MAGENTA +\
+                  'prepid='+ bcolors.ENDC,req['prepid'],', ',
+            print bcolors.MAGENTA+'Dataset name='+ bcolors.ENDC,req['dataset_name'],\
+                  ', '+bcolors.MAGENTA+'Extension='+ bcolors.ENDC,req['extension'],
+            if listAttr < 6: print', '+bcolors.MAGENTA+'Completed/Total events='+ bcolors.ENDC,str(req['completed_events'])+'/'+str(req['total_events']),\
+                  ''+ bcolors.ENDC,
+            else: print '\t('+req['prepid']+')','\n'
+              
+            if listAttr > 0 and listAttr < 6:
                 print bcolors.RED +\
-                      'Approval='+ bcolors.ENDC,req['approval'],\
+                      '\nApproval='+ bcolors.ENDC,req['approval'],\
                       ', '+bcolors.RED+'Status='+ bcolors.ENDC,req['status'],\
                       ', '+bcolors.RED+'Time Event='+ bcolors.ENDC,req['time_event'],\
                       ', '+bcolors.RED+'CMSSW Release='+ bcolors.ENDC,req['cmssw_release'],\
                       ', '+bcolors.RED+'Priority='+ bcolors.ENDC,req['priority'],\
                       ''+ bcolors.ENDC
-            if listAttr > 1:
-                if(len(req['generator_parameters'])>0):
+            if listAttr > 1 and listAttr < 6:
+                if(len(req['generator_parameters'])>0 and len(req['generator_parameters'][0])>0):
                     print bcolors.GREEN +\
                         'Cross Section='+ bcolors.ENDC,req['generator_parameters'][0]['cross_section'],'pb',\
                         ', '+bcolors.GREEN+'Filter efficiency='+ bcolors.ENDC,str(req['generator_parameters'][0]['filter_efficiency'])+' +/- '+str(req['generator_parameters'][0]['filter_efficiency_error']),\
@@ -129,10 +138,11 @@ def getPrepIDListWithAttributes(query_string,listAttr):
                       ', '+bcolors.CYAN+'Name of Fragment='+ bcolors.ENDC,req['name_of_fragment'],\
                       ', '+bcolors.CYAN+'Notes='+ bcolors.ENDC,req['notes'],\
                       ''+ bcolors.ENDC
-            if listAttr > 2:
+            if listAttr > 2 and listAttr < 6:
                 print bcolors.BLUE +\
-                      'Last Updater Name='+ bcolors.ENDC,req['history'][0]['updater']['author_name'],\
+                      'Creator Name='+ bcolors.ENDC,req['history'][0]['updater']['author_name'],\
                       '(',req['history'][0]['updater']['author_email'],')',\
+                      'on',req['history'][0]['updater']['submission_date'],\
                       '\n'\
                       + bcolors.Gray_like_Ghost +\
                       'McM View Link= https://cms-pdmv.cern.ch/mcm/requests?shown=2199023255551&prepid='+req['prepid'],\
@@ -153,11 +163,24 @@ def getPrepIDListWithAttributes(query_string,listAttr):
                     prepid1 = []
                     for req1 in chained_prepIds:
                       prepid1.append(req1['prepid'])
-                    print current_chain+" : "+ bcolors.ENDC+str(prepid1).strip('[]').replace("u'",'').replace("'","")
-                    print bcolors.Gray_like_Ghost +\
+                      prepid1.append('Approv/Status: '+str(req1['approval'])+'/'+str(req1['status']))
+                      prepid1.append('Compl Evts: '+str(req1['completed_events'])+'/'+str(req1['total_events']))
+                      prepid1.append('Prio: '+str(req1['priority']))
+                      prepid1.append('Last update:  '+str(req1['history'][len(req1['history'])-1]['action'])+' '+str(req1['history'][len(req1['history'])-1]['updater']['submission_date']))
+                      if 'GS' not in req1['prepid'] and 'Mini' not in req1['prepid'] and len(req1['reqmgr_name']) > 0:
+                        gif = str(req1['reqmgr_name'][0]['name'].replace('pdmvserv_task_','').replace(req1['prepid'],'').replace('__','/').replace('_','/'))+'.gif'
+                        prepid1.append('Events growth Link:  https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/pdmvserv/task/'+str(req1['prepid'])+gif)
+                      else: prepid1.append('')
+                      n=6
+                    prepid1 = [prepid1[i:i+n] for i in range(0, len(prepid1), n)]
+                    print current_chain+" : "+ bcolors.ENDC
+                    for prepid in prepid1[::-1]:
+                      print str(prepid).strip('[').strip(']').replace("u'",'').replace("'","").replace(",","\t||\t")
+                    if listAttr < 6: print bcolors.Gray_like_Ghost +\
                     'McM View Link= https://cms-pdmv.cern.ch/mcm/chained_requests?shown=4095&prepid='+current_chain,\
                     ''+ bcolors.YELLOW
-            if listAttr > 4:
+                    else: print '\n'
+            if listAttr > 4 and listAttr < 6:
                 print bcolors.WHITE +'Fragment code=\n'+\
                       bcolors.Gray_like_Ghost +\
                       req['fragment'],\
@@ -239,7 +262,6 @@ def printList(list, format):
 def main():
     args = getArguments() # Setup flags and get arguments
 
-    print 'args.listAttr',args.listAttr
     if args.listAttr < 0:
         list = getPrepIDList(args.query, args.getNew, args.getForValidation,
                              args.getChain)
