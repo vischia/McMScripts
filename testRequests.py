@@ -38,7 +38,7 @@ def getArguments():
     parser.add_argument('-nxsec', dest='nEventsXsec', default=1500, help='Number of events to test for Cross section purpose.')
     parser.add_argument('-qxsec', dest='xsecQueue', default='8nh', help='Submission queue for Cross section test.')
     parser.add_argument('-xsec', action='store_true', dest='xsec',
-                        help='Run only GEN and not SIM step (useful to get cross section).')
+                        help='Run another parallel batch job with GEN step only and not SIM (useful to get cross section).')
 
     args_ = parser.parse_args()
     return args_
@@ -142,10 +142,10 @@ def submitToBatch(PrepId, xsec, xsecQueue):
         batch_command = "bsub -q 8nh {0}.sh".format(PrepId)
     output = subprocess.Popen(batch_command, stdout=subprocess.PIPE,
                               shell=True).communicate()[0]
-    # jobID = '733114557'
-    # if xsec: jobID = '733114566'
     match = re.match('Job <(\d*)> is', output)
     jobID = match.group(1)
+    # jobID = '735510839'
+    # if xsec: jobID = '735510837'
     print batch_command,' (jobID= '+jobID+')'
     return jobID
 
@@ -156,19 +156,17 @@ def createTest(compactPrepIDList, outputFile, newcsv, nEvents, xsec, nEventsXsec
       add_datetime = str(datetime.datetime.now()).replace(' ','_').replace(':','-').split('.')[0]
       outputFile = outputFile.replace('.csv','')+'_'+add_datetime+'.csv'
     csvfile = csv.writer(open(outputFile, 'w'))
-    if xsec:
-        csvfile.writerow(['PrepId', 'JobId', 'JobId xsec', 'Time per event [s]',
-                        'Size per event [kB]','Cross section [pb]'])
-    else:
-        csvfile.writerow(['PrepId', 'JobId', 'Time per event [s]',
-                        'Size per event [kB]'])
+    row = ['PrepId', 'JobId', 'Time per event [s]', 'Size per event [kB]']
+    # if xsec:
+    row = row + ['JobId xsec','Cross section [pb]','Filter efficiency','Filter efficiency error','Match efficiency','Match efficiency error']
+    csvfile.writerow(row)
 
     print "Testing {0} requests".format(len(requests))
     for req in requests:
-        if xsec and 'GS' in req.getPrepId():
-            getTestScript(req.getPrepId(), nEventsXsec,True)
-            jobIDxsec = submitToBatch(req.getPrepId(),True,xsecQueue)
-            req.setJobIDxsec(jobIDxsec)
+        # if xsec: # and 'GS' in req.getPrepId():
+        getTestScript(req.getPrepId(), nEventsXsec,True)
+        jobIDxsec = submitToBatch(req.getPrepId(),True,xsecQueue)
+        req.setJobIDxsec(jobIDxsec)
         
         getTestScript(req.getPrepId(), nEvents,False)
         jobID = submitToBatch(req.getPrepId(),False,'8nh')
@@ -176,21 +174,21 @@ def createTest(compactPrepIDList, outputFile, newcsv, nEvents, xsec, nEventsXsec
         
         searched = re.search('chain_', req.getPrepId())
         if searched is None:
-            if xsec:
-                csvfile.writerow([req.getPrepId(), req.getJobID(), req.getJobIDxsec(), "", "",""])
-            else:
-                csvfile.writerow([req.getPrepId(), req.getJobID(), "", ""])
+            # if xsec:
+            csvfile.writerow([req.getPrepId(), req.getJobID(),"1","1",req.getJobIDxsec(),"1","1","0.1","1","0.1"])
+            # else:
+                # csvfile.writerow([req.getPrepId(), req.getJobID(), "", ""])
         else:
             mcm = restful(dev=False) # Get McM connection
             mcm_req = mcm.getA('chained_requests', req.getPrepId())
             wmLHEPrepId = mcm_req['chain'][0]
             GSPrepId = mcm_req['chain'][1]
-            if xsec:
-                csvfile.writerow([wmLHEPrepId, req.getJobID(), req.getJobIDxsec(), "", ""])
-                csvfile.writerow([GSPrepId, req.getJobID(), req.getJobIDxsec(), "", ""])
-            else:
-                csvfile.writerow([wmLHEPrepId, req.getJobID(), "", ""])
-                csvfile.writerow([GSPrepId, req.getJobID(), "", ""])
+            # if xsec:
+            csvfile.writerow([wmLHEPrepId, req.getJobID(), "1", "1", req.getJobIDxsec(), "1","1","0.1","1","0.1"])
+            csvfile.writerow([GSPrepId, req.getJobID(), "1", "1", req.getJobIDxsec(), "1","1","0.1","1","0.1"])
+            # else:
+                # csvfile.writerow([wmLHEPrepId, req.getJobID(), "", ""])
+                # csvfile.writerow([GSPrepId, req.getJobID(), "", ""])
     return
 
 def exitDuplicateField(file_in_,field_):
@@ -330,7 +328,7 @@ def fillFields(csvfile, fields):
             tmpReq.setDataSetName(row[fields[0]])
         if fields[1] > -1:
             tmpReq.setMCDBID(row[fields[1]])
-        if fields[2] > -1 and row[fields[2]] != "":
+        if fields[2] > -1 and row[fields[2]] != "" and float(row[fields[2]]) != 1:
             tmpReq.setCS(row[fields[2]])
         if fields[3] > -1:
             tmpReq.setEvts(row[fields[3]])
@@ -339,19 +337,19 @@ def fillFields(csvfile, fields):
             tmpReq.setCamp(campaign)
         if fields[4] > -1:
             tmpReq.setFrag(formatFragment(row[fields[4]],campaign))
-        if fields[5] > -1 and row[fields[5]] != "":
+        if fields[5] > -1 and row[fields[5]] != "" and float(row[fields[5]]) != 1:
             tmpReq.setTime(row[fields[5]])
-        if fields[6] > -1 and row[fields[6]] != "":
+        if fields[6] > -1 and row[fields[6]] != "" and float(row[fields[6]]) != 1:
             tmpReq.setSize(row[fields[6]])
         if fields[7] > -1:
             tmpReq.setTag(row[fields[7]])
         if fields[8] > -1:
             tmpReq.setGen(row[fields[8]].split(" ")) # Multiple generators separated by spaces
-        if fields[9] > -1:
+        if fields[9] > -1  and row[fields[9]] != "" and float(row[fields[9]]) != 1:
             tmpReq.setFiltEff(row[fields[9]])
         if fields[10] > -1:
             tmpReq.setFiltEffErr(row[fields[10]])
-        if fields[11] > -1:
+        if fields[11] > -1 and row[fields[11]] != "" and float(row[fields[11]]) != 1:
             tmpReq.setMatchEff(row[fields[11]])
         if fields[12] > -1:
             tmpReq.setMatchEffErr(row[fields[12]])
@@ -381,25 +379,35 @@ def rewriteCSVFile(csvfile, requests):
     requests_number=0
     for req in requests:
         if requests_number == 0:
-            if req.useCS():
-                csvWriter.writerow(['PrepId', 'JobId', 'JobId xsec', 'Time per event [s]',
-                                'Size per event [kB]','Cross section [pb]'])
-            else:
-                csvWriter.writerow(['PrepId', 'JobId', 'JobId xsec', 'Time per event [s]',
-                                'Size per event [kB]'])
+            row = ['PrepId', 'JobId', 'Time per event [s]', 'Size per event [kB]']
+            row = row + ['JobId xsec','Cross section [pb]','Filter efficiency','Filter efficiency error','Match efficiency','Match efficiency error']
+            csvWriter.writerow(row)
         
-        timePerEvent = ""
+        timePerEvent = 1
         if req.useTime(): timePerEvent = req.getTime()
-        sizePerEvent = ""
+        sizePerEvent = 1
         if req.useSize(): sizePerEvent = req.getSize()
-        CS = ""
-        if req.useCS(): 
-            CS = req.getCS()
-            csvWriter.writerow([req.getPrepId(), req.getJobID(), req.getJobIDxsec(), timePerEvent,
-                            sizePerEvent, CS])
-        else:
-            csvWriter.writerow([req.getPrepId(), req.getJobID(), req.getJobIDxsec(), timePerEvent,
-                            sizePerEvent])
+        CS = 1
+        if req.useCS(): CS = req.getCS()
+        FiltEff = 1
+        if req.useFiltEff(): FiltEff = req.getFiltEff()
+        MatchEff = 1
+        if req.useMatchEff(): MatchEff = req.getMatchEff()
+        
+        csvWriter.writerow([req.getPrepId(), 
+                            req.getJobID(), 
+                            timePerEvent,
+                            sizePerEvent, 
+                            req.getJobIDxsec(), 
+                            CS,
+                            FiltEff,
+                            req.getFiltEffErr(), 
+                            MatchEff,
+                            req.getMatchEffErr(), 
+                            ])
+        # else:
+            # csvWriter.writerow([req.getPrepId(), req.getJobID(), req.getJobIDxsec(), timePerEvent,
+                            # sizePerEvent])
         requests_number = requests_number+1
     return
 
@@ -431,24 +439,25 @@ def getTimeSizeFromFile(stdoutFile, iswmLHE):
         sizePerEvent = -1
     return timePerEvent, sizePerEvent
 
-def getCSFromFile(stdoutFile):
-    CS = 0
+def getCSMatchFiltEffFromFile(stdoutFile, iswmLHE):
+    MatchEff = 1; HepMCFiltEff = 1; FiltEff = 1; CS = 0; 
+    matchMatchEff = ''; matchFiltEff = ''; matchCS = ''; 
     fileContents = open(stdoutFile, 'r')
-    match = ''
     for line in fileContents:
-        if 'After filter: final cross section' in line: 
-            match = line.split('=')[1].split('+-')[0].replace(' ','')
-            CS = float(match)
+        if 'Total		' in line and '+/-' in line: 
+            MatchEff = float(line.split()[16])/100.
+            # print 'MatchEff',MatchEff
             continue
-    # for line in fileContents:
-        # # match = re.match('After filter: final cross section = (\d*\.\d*) +- (\d*\.\d*) pb', line)
-        # if 'After filter: final cross section' in line: match = line.split('=')[1].split('+-')[0].replace(' ','')
-        # if match is not None:
-            # print 'line',line
-            # nEvents = float(match.group(1))
-            # continue
-
-    return CS
+        if 'Filter efficiency (event-level)= ' in line: 
+            FiltEff = float(line.split()[7])
+            # print 'FiltEff',FiltEff
+            continue
+        if 'After filter: final cross section' in line: 
+            CS = float(line.split('=')[1].split('+-')[0].replace(' ',''))
+            if iswmLHE: break
+            else: continue
+    # sys.exit(1)
+    return MatchEff , FiltEff , CS
 
 def getTimeSize(requests):
     number_complete = 0
@@ -463,22 +472,24 @@ def getTimeSize(requests):
                     iswmLHE = True
                 timePerEvent, sizePerEvent = getTimeSizeFromFile(stdoutFile,
                                                                  iswmLHE)
+                
+                # print 'timePerEvent',timePerEvent,'sizePerEvent',sizePerEvent
                 req.setTime(timePerEvent)
                 req.setSize(sizePerEvent)
         else:
             number_complete += 1
 
     if number_complete == len(requests):
-        print "Extracted Time per event and Size for all {0} requests.".format(len(requests))
+        print "Extracted Time and Size per event for all {0} requests.".format(len(requests))
     else:
-        print "Extracted Time per event and Size for {0} of {1} requests. {2} requests remain.".format(
+        print "Extracted Time and Size per event for {0} of {1} requests. {2} requests remain.".format(
             number_complete, len(requests), len(requests) - number_complete)
     return
 
-def getCrossSection(requests):
+def getxSecMatchFiltEff(requests):
     number_complete = 0
     for req in requests:
-        if not req.useCS():
+        if not req.useCS() or not req.useFiltEff() or not req.useMatchEff():
             stdoutFile = "LSFJOB_{0}/STDOUT".format(req.getJobIDxsec())
             if os.path.exists(stdoutFile):
                 number_complete += 1
@@ -487,7 +498,9 @@ def getCrossSection(requests):
                 if searched is not None:
                     iswmLHE = True
                 if iswmLHE == False:
-                    CSPerEvent = getCSFromFile(stdoutFile)
+                    MatchEff, FiltEff, CSPerEvent = getCSMatchFiltEffFromFile(stdoutFile,iswmLHE)
+                    req.setFiltEff(MatchEff)
+                    req.setMatchEff(FiltEff)
                     req.setCS(CSPerEvent)
         else:
             number_complete += 1
@@ -507,8 +520,8 @@ def extractTest(csvFile):
     csvfile.close()
 
     getTimeSize(requests)
-    getCrossSection(requests)
-
+    getxSecMatchFiltEff(requests)
+    
     csvfile = open(csvFile, 'w')
     rewriteCSVFile(csvfile, requests)
 
