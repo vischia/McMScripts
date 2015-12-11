@@ -31,12 +31,10 @@ prepids=['LHE','GS','DR','Mini']
 statuses=['new','validation','defined','approved','submitted'] #]
 actors=['perrozzi','obondu']
 
-# actors=['obondu']
-# tags=['HH']
-# tags=['HGG']
-# prepids=['LHE']
+# actors=[]
+# tags=['HBB']
+# prepids=['DR']
 # statuses=['submitted'] #]
-# print_to_screen = True
 
 class bcolors:
     MAGENTA = '\033[35m'
@@ -66,7 +64,7 @@ class bcolors:
     Highlighted_Crimson_like_Chianti = '\033[1;48m'
 
 def print_table_header(data, row_length):
-    print '<table border="1" CELLPADDING="5">'
+    print '<table border="1" CELLPADDING="4">'
     counter = 0
     for element in data:
         if counter % row_length == 0:
@@ -106,7 +104,7 @@ def getMcMlist(query_string,printout):
     return req_list
 
 def getPrepIDListWithAttributes(query_string,tag):
-    print '<font size="5">MCM query string: <b>' + query_string + '</b> </font>'
+    print '<font size="5">MCM query string: <b> <a href="https://cms-pdmv.cern.ch/mcm/requests?' + query_string + '" target="_blank">'+query_string+'</a></b> </font>'
     print '<br> <br> Last update on: <b>' + str(datetime.datetime.now()) + '</b>'
     # return
     temp = sys.stdout
@@ -153,9 +151,10 @@ def getPrepIDListWithAttributes(query_string,tag):
                   gif_name = str(req1['reqmgr_name'][0]['name'].replace('pdmvserv_task_','').replace(req1['prepid'],'').replace('__','_'))
                   # print 'gif_name',gif_name
                   # print('wget '+gif+'; mv '+ntpath.basename(gif)+' '+plot_dir+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+'.gif')
-                  os.system('wget '+gif+'; mv '+ntpath.basename(gif)+' '+plot_dir+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+gif_name+'.gif')
+                  # os.system('wget '+gif+'; mv '+ntpath.basename(gif)+' '+plot_dir+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+gif_name+'.gif')
                   # prepid1.append('<a href="'+plot_dir.replace('/afs/cern.ch/user/p/perrozzi/www','https://perrozzi.web.cern.ch/perrozzi')+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+gif_name+'.gif'+'" target="_blank">Link</a>')
-                  prepid1.append('<a href="'+plot_dir.replace('/afs/cern.ch/user/p/perrozzi/www','https://perrozzi.web.cern.ch/perrozzi')+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+gif_name+'.gif'+'" target="_blank"><img src="'+plot_dir.replace('/afs/cern.ch/user/p/perrozzi/www','https://perrozzi.web.cern.ch/perrozzi')+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+gif_name+'.gif" style="border: none; height: 100px;" ></a>')
+                  # prepid1.append('<a href="'+plot_dir.replace('/afs/cern.ch/user/p/perrozzi/www','https://perrozzi.web.cern.ch/perrozzi')+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+gif_name+'.gif'+'" target="_blank"><img src="'+plot_dir.replace('/afs/cern.ch/user/p/perrozzi/www','https://perrozzi.web.cern.ch/perrozzi')+'/plots/'+req1['dataset_name']+'_'+tag+'_'+prepid_name+gif_name+'.gif" style="border: none; height: 100px;" ></a>')
+                  prepid1.append('<a href="'+gif+'" target="_blank"><img src="'+gif+'" style="border: none; height: 100px;" ></a>')
                 else: prepid1.append('')
                 prepid1.append(str(req1['priority']))
                 date_modif = str(str(req1['history'][len(req1['history'])-1]['updater']['submission_date']))
@@ -180,7 +179,8 @@ def getPrepIDListWithAttributes(query_string,tag):
             print_table_footer()
         
         print '<br>'
-        # sys.exit()
+    print '<br>Correctly finished listing requests<br>'
+    # sys.exit()
 
 def main():
     

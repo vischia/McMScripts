@@ -41,3 +41,6 @@ python validateChains.py PrepIDList
 
 # replace tab separated (excel likes it...) to comma separated (the script needs it...)
 sed -i 's/\t/,/g' file.csv
+
+# remove colors from colored STDOUT
+more log.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" > log2.log

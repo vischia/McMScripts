@@ -5,3 +5,6 @@ cern-get-sso-cookie -u https://cms-pdmv.cern.ch/mcm/ -o ~/private/prod-cookie.tx
 cern-get-sso-cookie -u https://cms-pdmv-dev.cern.ch/mcm/ -o ~/private/dev-cookie.txt --krb --reprocess
 
 python check_hig_requests.py
+
+# sendmail cms-higgs-mc_contacts@cern.ch < automatic_mail.txt
+# sendmail perrozzi@cern.ch < automatic_mail.txt
