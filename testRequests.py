@@ -426,7 +426,7 @@ def getTimeSizeFromFile(stdoutFile, iswmLHE):
         if match is not None:
             totalSize = float(match.group(1))
             continue
-        match = re.match('    <Metric Name="AvgEventCPU" Value="(\d*\.\d*)"/>',
+        match = re.match('    <Metric Name="AvgEventTime" Value="(\d*\.\d*)"/>',
                          line)
         if match is not None:
             timePerEvent = float(match.group(1))
