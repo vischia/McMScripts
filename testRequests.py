@@ -499,8 +499,8 @@ def getxSecMatchFiltEff(requests):
                     iswmLHE = True
                 if iswmLHE == False:
                     MatchEff, FiltEff, CSPerEvent = getCSMatchFiltEffFromFile(stdoutFile,iswmLHE)
-                    req.setFiltEff(MatchEff)
-                    req.setMatchEff(FiltEff)
+                    req.setFiltEff(FiltEff)
+                    req.setMatchEff(MatchEff)
                     req.setCS(CSPerEvent)
         else:
             number_complete += 1
