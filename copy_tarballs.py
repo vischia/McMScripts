@@ -1,8 +1,8 @@
 import os,sys
 from subprocess import Popen, PIPE
 
-# exit_anyway_after_check = False
-exit_anyway_after_check = True
+exit_anyway_after_check = False
+# exit_anyway_after_check = True
 
 eos_mount_dir = '/afs/cern.ch/user/p/perrozzi/eos/'
 
@@ -65,8 +65,8 @@ for input in inputs:
   if not os.path.isdir(fullpath_version):
     os.makedirs(fullpath_version)
   
-  print("cp "+input+" "+fullpath_version.replace(eos_mount_dir+'/cms','')+'/')
-  os.system("cp "+input+" "+fullpath_version+'/')
+  print("cp "+inputs_dir+"/"+input+" "+fullpath_version.replace(eos_mount_dir+'/cms','')+'/')
+  os.system("cp "+inputs_dir+"/"+input+" "+fullpath_version+'/')
   existing_list2.append(((fullpath_version+'/'+os.listdir(fullpath_version)[0]).replace(eos_mount_dir+'/cms/store/group/phys_generator/cvmfs','/cvmfs/cms.cern.ch/phys_generator')).replace('//','/'))
 
 print 'list of copied files'
