@@ -1,8 +1,8 @@
 import os,sys
 from subprocess import Popen, PIPE
 
-exit_anyway_after_check = False
-# exit_anyway_after_check = True
+# exit_anyway_after_check = False
+exit_anyway_after_check = True
 
 eos_mount_dir = '/afs/cern.ch/user/p/perrozzi/eos/'
 
@@ -30,7 +30,7 @@ else:
 print 'version',version
 
 print 'input dir',inputs_dir
-inputs = filter(None,os.popen('ls '+inputs_dir).read().split('\n'))
+inputs = filter(None,os.popen('ls '+inputs_dir+' | grep \\\.t').read().split('\n'))
 
 existing_list = []
 existing_list2 = []
