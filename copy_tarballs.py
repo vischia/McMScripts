@@ -1,4 +1,4 @@
-import os,sys
+import os,sys,datetime
 from subprocess import Popen, PIPE
 
 exit_anyway_after_check = False
@@ -6,19 +6,20 @@ exit_anyway_after_check = False
 
 eos_mount_dir = '/afs/cern.ch/user/p/perrozzi/eos/'
 
-# inputs_dir ='/afs/cern.ch/work/p/perrozzi/private/git/Hbb/McMScripts/gridpacks/'
+inputs_dir ='/afs/cern.ch/work/p/perrozzi/private/git/Hbb/McMScripts/gridpacks'
 # inputs_dir ='/afs/cern.ch/work/m/mharrend/public/gridpacksmartina/'
 # inputs_dir ='/afs/cern.ch/work/k/kreis/public/forHIGMC/'
 # inputs_dir ='/afs/cern.ch/work/a/ajafari/public/GridPacks'
 # inputs_dir ='/afs/cern.ch/user/l/lviliani/public/POWHEG_HJ_MiNLO_NNLOPS/'
 # inputs_dir ='/afs/cern.ch/work/z/zghiche/public/GridPacks/ForXanda/'
 # inputs_dir ='/afs/cern.ch/user/z/zghiche/public/ForXanda/'
-inputs_dir ='/afs/cern.ch/work/h/hroskes/public/test_centralproduction/highmassgridpacks/2l2nu/CMSSW_7_1_14/src/collect_gridpacks/'
+# inputs_dir ='/afs/cern.ch/work/h/hroskes/public/test_centralproduction/highmassgridpacks/2l2nu/CMSSW_7_1_14/src/collect_gridpacks/'
+# inputs_dir ='/afs/cern.ch/user/o/obondu/work/public/forMC'
                
 version = "v1"
   
-target_main = eos_mount_dir+'/cms/store/group/phys_generator/cvmfs/gridpacks/slc6_amd64_gcc481/13TeV/powheg/V2/'
-# target_main = eos_mount_dir+'/cms/store/group/phys_generator/cvmfs/gridpacks/slc6_amd64_gcc481/13TeV/madgraph/V5_2.3.2.2/'
+# target_main = eos_mount_dir+'/cms/store/group/phys_generator/cvmfs/gridpacks/slc6_amd64_gcc481/13TeV/powheg/V2/'
+target_main = eos_mount_dir+'/cms/store/group/phys_generator/cvmfs/gridpacks/slc6_amd64_gcc481/13TeV/madgraph/V5_2.3.3/'
 
 print 'target main folder',target_main
 if not os.path.isdir(eos_mount_dir+'/cms/store/group/phys_generator/cvmfs/gridpacks/'):
@@ -71,4 +72,8 @@ for input in inputs:
 
 print 'list of copied files'
 print existing_list2
-
+datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+text_file = open("list_of_copied_gridpacks_"+datetime+".txt", "w")
+for item in existing_list2:
+    text_file.write("%s\n" % item)
+text_file.close()
