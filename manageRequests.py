@@ -445,6 +445,7 @@ def modifyRequests(requests, num_requests, doDryRun, useDev, isLHErequest):
             mod_req['name_of_fragment'] = reqFields.getFrag()
         if reqFields.useTag():
             mod_req['fragment_tag'] = reqFields.getTag()
+        mod_req['fragment'] = ''
         if reqFields.useMcMFrag():
             mod_req['fragment'] = reqFields.getMcMFrag()
         if reqFields.useTime():
